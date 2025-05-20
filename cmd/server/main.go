@@ -3,17 +3,35 @@
 // import (
 // 	"fmt"
 // 	"log"
+// 	"minisoccer-backend/config"
 // 	"net/http"
+// 	"os"
+
+// 	"github.com/joho/godotenv"
 // )
 
 // func main() {
 // 	// Define the server address and port
-// 	addr := ":8080"
+// 	err := godotenv.Load()
+// 	if err != nil {
+// 		log.Fatal("Error loading .env file")
+// 	}
+// 	addr := ":" + os.Getenv("PORT")
+// 	if addr == ":" {
+// 		addr = ":3011"
+// 	}
 
+// 	// Initialize the database
+// 	db := config.InitDatabase()
+// 	if db == nil {
+// 		log.Fatal("Failed to initialize database")
+// 	}
 // 	// Define a simple handler
 // 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 // 		fmt.Fprintln(w, "Welcome to Mini Soccer Backend!")
 // 	})
+
+// 	// seeder.SeedUsers() // 👈 Call it just once, then remove or comment out
 
 // 	// Start the server
 // 	log.Printf("Server is running on http://localhost%s\n", addr)
@@ -28,9 +46,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
-	"github.com/mattismyname3011/minisoccer-backend/config"
-	"github.com/mattismyname3011/minisoccer-backend/routes"
+
+	"minisoccer-backend/config"
+	"minisoccer-backend/routes"
 )
 
 func main() {
@@ -39,13 +59,25 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	db := config.InitDatabase()
-	app := routes.SetupRouter(db)
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	addr := ":" + os.Getenv("PORT")
+	if addr == ":" {
+		addr = ":3011"
 	}
 
-	app.Listen(":" + port)
+	db := config.InitDatabase()
+	if db == nil {
+		log.Fatal("Failed to initialize database")
+	}
+
+	app := fiber.New()
+
+	// Register API routes
+	api := app.Group("/api")
+	routes.RegisterPublicRoutes(api)
+	routes.RegisterAdminRoutes(api)
+
+	log.Printf("🚀 Server running on http://localhost%s\n", addr)
+	if err := app.Listen(addr); err != nil {
+		log.Fatalf("Could not start server: %s\n", err)
+	}
 }

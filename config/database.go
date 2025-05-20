@@ -1,25 +1,57 @@
 package config
 
 import (
-	"database/sql"
+	"fmt"
 	"log"
+	"os"
+	"time"
 
-	_ "github.com/lib/pq" // Replace with your database driver
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
+	"minisoccer-backend/models"
 )
 
-func InitDatabase() *sql.DB {
-	// Replace with your database connection details
-	connStr := "user=username dbname=dbname password=password host=localhost sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
+var DB *gorm.DB
+
+func InitDatabase() *gorm.DB {
+	dsn := os.Getenv("DB_URL")
+	if dsn == "" {
+		log.Fatal("DB_URL is not set in .env")
+	}
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
-		log.Fatalf("Failed to connect to the database: %v", err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Test the database connection
-	if err := db.Ping(); err != nil {
-		log.Fatalf("Database connection is not alive: %v", err)
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("Failed to get sql.DB: %v", err)
 	}
 
-	log.Println("Database connection established")
+	// Connection pool settings
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	// Auto migrate models
+	err = db.AutoMigrate(
+		&models.User{},
+		// &models.Court{},
+		// &models.TimeSlot{},
+		// &models.Booking{},
+		// &models.Addon{},
+		// &models.Pricing{},
+	)
+	if err != nil {
+		log.Fatalf("Auto migration failed: %v", err)
+	}
+
+	DB = db
+	fmt.Println("Database connection established.")
 	return db
 }
