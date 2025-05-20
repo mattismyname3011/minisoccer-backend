@@ -13,6 +13,17 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new user account
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param user body Request true "User registration"
+// @Success 201 {object} RegisterResponse
+// @Failure 400 {object} fiber.Map
+// @Router /register [post]
+
 func Register(c *fiber.Ctx) error {
 	type Request struct {
 		Email    string `json:"email"`
@@ -42,6 +53,16 @@ func Register(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "User registered"})
 }
 
+// Login godoc
+// @Summary Log in a user
+// @Description Authenticates user credentials and returns JWT token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param credentials body Login true "Email and Password"
+// @Success 200 {object} LoginResponse
+// @Failure 401 {object} fiber.Map
+// @Router /login [post]
 func Login(c *fiber.Ctx) error {
 	type Request struct {
 		Email    string `json:"email"`

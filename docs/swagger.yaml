@@ -1,0 +1,9 @@
+basePath: /api
+host: localhost:3011
+info:
+  contact: {}
+  description: Backend for field booking, authentication, and admin control.
+  title: MiniSoccer Backend API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

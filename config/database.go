@@ -38,17 +38,19 @@ func InitDatabase() *gorm.DB {
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	// Auto migrate models
-	err = db.AutoMigrate(
-		&models.User{},
-		// &models.Court{},
-		// &models.TimeSlot{},
-		// &models.Booking{},
-		// &models.Addon{},
-		// &models.Pricing{},
-	)
-	if err != nil {
-		log.Fatalf("Auto migration failed: %v", err)
+	if os.Getenv("AUTO_MIGRATE") == "true" {
+		// Auto migrate models
+		err = db.AutoMigrate(
+			&models.User{},
+			// &models.Court{},
+			// &models.TimeSlot{},
+			// &models.Booking{},
+			// &models.Addon{},
+			// &models.Pricing{},
+		)
+		if err != nil {
+			log.Fatalf("Auto migration failed: %v", err)
+		}
 	}
 
 	DB = db
