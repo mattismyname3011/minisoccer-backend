@@ -15,6 +15,7 @@ import (
 	"os"
 
 	_ "minisoccer-backend/docs"
+	"minisoccer-backend/seeder"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
@@ -40,6 +41,12 @@ func main() {
 		log.Fatal("Failed to initialize database")
 	}
 
+	if os.Getenv("SEED") == "true" {
+		seeder.SeedUsers()
+		log.Println("Database seeded with initial data")
+
+	}
+
 	app := fiber.New()
 
 	// ✅ Add root route
@@ -50,6 +57,7 @@ func main() {
 	api := app.Group("/api")
 	routes.RegisterPublicRoutes(api)
 	routes.RegisterAdminRoutes(api)
+	routes.RegisterUserRoutes(api)
 
 	// After your route registrations
 	app.Get("/swagger/*", swagger.HandlerDefault)

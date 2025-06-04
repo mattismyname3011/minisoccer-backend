@@ -13,17 +13,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Register godoc
-// @Summary Register a new user
-// @Description Create a new user account
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param user body Request true "User registration"
-// @Success 201 {object} RegisterResponse
-// @Failure 400 {object} fiber.Map
-// @Router /register [post]
-
 func Register(c *fiber.Ctx) error {
 	type Request struct {
 		Email    string `json:"email"`
@@ -53,16 +42,6 @@ func Register(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "User registered"})
 }
 
-// Login godoc
-// @Summary Log in a user
-// @Description Authenticates user credentials and returns JWT token
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param credentials body Login true "Email and Password"
-// @Success 200 {object} LoginResponse
-// @Failure 401 {object} fiber.Map
-// @Router /login [post]
 func Login(c *fiber.Ctx) error {
 	type Request struct {
 		Email    string `json:"email"`
@@ -89,7 +68,7 @@ func Login(c *fiber.Ctx) error {
 		"id":    user.ID,
 		"email": user.Email,
 		"role":  user.Role,
-		"exp":   time.Now().Add(time.Hour * 72).Unix(), // expires in 72 hours
+		"exp":   time.Now().Add(time.Minute * 15).Unix(), // expires in 15 minutes
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(secret))
@@ -98,4 +77,44 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"token": signedToken})
+}
+
+func Logout(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	token, err := utils.ExtractTokenFromHeader(authHeader)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid token",
+		})
+	}
+
+	claims, err := utils.ParseToken(token)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid token",
+		})
+	}
+
+	// Store token in blacklist (assuming you have a TokenBlacklist model)
+	exp := time.Unix(claims.ExpiresAt.Unix(), 0)
+	blacklisted := models.TokenBlacklist{
+		Token:     token,
+		ExpiresAt: exp,
+	}
+	if err := config.DB.Create(blacklisted).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Could not blacklist token",
+		})
+	}
+
+	return c.JSON(fiber.Map{"message": "Logged out successfully"})
+}
+
+func GetUsers(c *fiber.Ctx) error {
+	var users []models.User
+	if err := config.DB.Find(&users).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to fetch users")
+	}
+
+	return c.JSON(users)
 }

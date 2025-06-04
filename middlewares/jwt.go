@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"minisoccer-backend/config"
+	"minisoccer-backend/utils"
 	"os"
 	"strings"
 
@@ -31,4 +33,30 @@ func JWTProtected() fiber.Handler {
 
 		return c.Next()
 	}
+}
+
+func CheckBlacklist(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	token, err := utils.ExtractTokenFromHeader(authHeader)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	var exists bool
+	err = config.DB.Raw("SELECT EXISTS (SELECT 1 FROM token_blacklists WHERE token = ? AND expires_at > NOW())", token).Scan(&exists).Error
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database error",
+		})
+	}
+
+	if exists {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Token has been revoked",
+		})
+	}
+
+	return c.Next()
 }
