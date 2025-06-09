@@ -3,14 +3,13 @@ package config
 import (
 	"fmt"
 	"log"
+	"minisoccer-backend/models"
 	"os"
 	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-
-	"minisoccer-backend/models"
 )
 
 var DB *gorm.DB
@@ -42,11 +41,11 @@ func InitDatabase() *gorm.DB {
 		// Auto migrate models
 		err = db.AutoMigrate(
 			&models.User{},
-			// &models.Court{},
-			// &models.TimeSlot{},
-			// &models.Booking{},
-			// &models.Addon{},
-			// &models.Pricing{},
+		// &models.Court{},
+		// &models.TimeSlot{},
+		// &models.Booking{},
+		// &models.Addon{},
+		// &models.Pricing{},
 		)
 		if err != nil {
 			log.Fatalf("Auto migration failed: %v", err)

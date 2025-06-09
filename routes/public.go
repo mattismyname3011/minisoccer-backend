@@ -12,6 +12,7 @@
 package routes
 
 import (
+	"minisoccer-backend/controllers"
 	"minisoccer-backend/middlewares"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,12 +24,17 @@ import (
 // 	app.Get("/users", controllers.GetUsers)
 // }
 
-func RegisterPublicRoutes(api fiber.Router) {
-	public := api.Group("/public", middlewares.CheckPublicSecret)
+func RegisterPublicRoutes(app fiber.Router) {
+	app.Post("/register", controllers.Register)
+	app.Post("/login", controllers.Login)
+
+	public := app.Group("/public", middlewares.CheckPublicSecret)
 
 	public.Get("/info", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"message": "This is protected public info",
 		})
 	})
+
+	
 }

@@ -15,4 +15,5 @@ func RegisterUserRoutes(app fiber.Router) {
 	})
 
 	user.Get("/logout", controllers.Logout) // Logout endpoint for users)
+
 }

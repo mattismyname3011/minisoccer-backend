@@ -43,6 +43,8 @@ func main() {
 
 	if os.Getenv("SEED") == "true" {
 		seeder.SeedUsers()
+		seeder.SeedPricing()
+		seeder.SeedBookings()
 		log.Println("Database seeded with initial data")
 
 	}
@@ -58,6 +60,7 @@ func main() {
 	routes.RegisterPublicRoutes(api)
 	routes.RegisterAdminRoutes(api)
 	routes.RegisterUserRoutes(api)
+	routes.RegisterBookingRoutes(api)
 
 	// After your route registrations
 	app.Get("/swagger/*", swagger.HandlerDefault)
